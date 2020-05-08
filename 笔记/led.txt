@@ -1,0 +1,72 @@
+    
+	//引脚配置模板
+	  1、定义结构体
+	  2、时钟配置
+	  3、结构体配置
+	  4、结构体初始化
+	
+	GPIO_InitTypeDef  GPIO_StructInit;//定义结构体
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOx, ENABLE)//x可以是A到G
+	GPIO_InitStructure.GPIO_Mode = 模式;
+	GPIO_InitStructure.GPIO_Pin  = 引脚号，如GPIO_InitStructure;
+	GPIO_InitStructure.GPIO_Speed= 输出频率，如 GPIO_Speed_50MHz;
+	GPIO_Init(GPIOx, &GPIO_InitStructure);//初始化结构体，x可以是A到G
+	void main()
+	{
+	while(1)
+	{
+	GPIO_SetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) //置1
+	GPIO_ResetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)//置0
+	
+	}
+	
+	}
+	
+	
+	typedef struct
+{
+  uint16_t GPIO_Pin;             //引脚号，如GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_2;
+								   如果我们想配置Pin8~Pin15，我们可以直接0x0100+0x0200+0x0400+0x0800+0x1000+0x2000+0x4000+0x8000=0xff00 
+									所以说，我们直接使GPIO_Pin = 0xff00;就可以达到一次性配置PC8~PC15的作用了。
+
+  GPIOSpeed_TypeDef GPIO_Speed;  //输出频率typedef enum
+											{ 
+											 GPIO_Speed_10MHz = 1,
+											 GPIO_Speed_2MHz, 
+											 GPIO_Speed_50MHz
+											}GPIOSpeed_TypeDef;
+  
+  GPIOMode_TypeDef GPIO_Mode;    //模式
+									  typedef enum
+									{ GPIO_Mode_AIN = 0x0,          //模拟输入	
+									  GPIO_Mode_IN_FLOATING = 0x04,	//	浮空输入
+									  GPIO_Mode_IPD = 0x28,			//下拉输入
+									  GPIO_Mode_IPU = 0x48,			//上拉输入
+									  GPIO_Mode_Out_OD = 0x14,		//开漏输出
+									  GPIO_Mode_Out_PP = 0x10,		//推挽输出
+									  GPIO_Mode_AF_OD = 0x1C,		//复用开漏输出
+									  GPIO_Mode_AF_PP = 0x18		//复用推挽输出
+									}GPIOMode_TypeDef;
+}GPIO_InitTypeDef;
+//结构体配置
+	
+	GPIO_InitTypeDef GPIO_InitStructure; //定义结构体
+    RCC_APB2PeriphClockCmd(uint32_t RCC_APB2Periph, FunctionalState NewState);//配置系统时钟，在stm32f10x_rcc.h找到
+																			 * @param  RCC_APB2Periph: specifies the APB2 peripheral to gates its clock.
+																			  *   This parameter can be any combination of the following values:
+																			  *     @arg RCC_APB2Periph_AFIO, RCC_APB2Periph_GPIOA, RCC_APB2Periph_GPIOB,
+																			  *          RCC_APB2Periph_GPIOC, RCC_APB2Periph_GPIOD, RCC_APB2Periph_GPIOE,
+																			  *          RCC_APB2Periph_GPIOF, RCC_APB2Periph_GPIOG, RCC_APB2Periph_ADC1,
+																			  *          RCC_APB2Periph_ADC2, RCC_APB2Periph_TIM1, RCC_APB2Periph_SPI1,
+																			  *          RCC_APB2Periph_TIM8, RCC_APB2Periph_USART1, RCC_APB2Periph_ADC3,
+																			  *          RCC_APB2Periph_TIM15, RCC_APB2Periph_TIM16, RCC_APB2Periph_TIM17,
+																			  *          RCC_APB2Periph_TIM9, RCC_APB2Periph_TIM10, RCC_APB2Periph_TIM11     
+																			  * @param  NewState: new state of the specified peripheral clock.
+																			  *   This parameter can be: ENABLE or DISABLE.
+																				
+	
+	GPIO_Init(GPIOx, &GPIO_InitStructure);//初始化结构体 ，在stm32f10x_gpio.h里可以找到
+										  * @param  GPIOx: where x can be (A..G) to select the GPIO peripheral.
+										  * @param  GPIO_InitStruct: pointer to a GPIO_InitTypeDef structure that
+										  *         contains the configuration information for the specified GPIO peripheral.
+

@@ -1,0 +1,75 @@
+ 
+
+
+ void KEY_Init(void)  //按键初始化函数
+{
+		GPIO_InitTypeDef GPIO_InitStructure;
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB,ENABLE);
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_8;
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;  //
+		
+		 首先上下拉的目的是给IO口设定一个默认的状态，比如按键控制使能的话
+		如果按键按下是高电平有效的话，我们就下拉，让该IO口在默认状态下处于低电平
+		（即没有按键按下时IO口检测到的总是低电平，只有按键按下的时候IO口才会检测到高电平
+		如果按键按下是低电平有效的话，我们就上拉，让该IO口在默认状态下处于高电平
+		即没有按键按下时IO口检测到的总是高电平，只有按键按下的时候IO口才会检测到低电平）。
+		（按键低电平有效，引脚设置上拉输入。按键高电平有效，引脚设置下拉输入）
+		
+		GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_Init(GPIOA, &GPIO_InitStructure);
+	
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
+}
+
+
+uint8_t GPIO_ReadInputDataBit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);//    在stm32f10x_gpio.h找到。用来获取某个引脚的电平，
+																			返回值就是它的电平状态（高电平返回1，低电平返回0）
+//知识拓展
+  长按触发
+  1、在mian.c定义一个按键读取标志位key_flag
+  u8 key_flag=0;
+  2、在主循环里面编写,当这个按键读取标志位被置1时候，按键就进行一次读取，读取完成后就标志位清零
+  while(1)
+  {
+	  if(key_flag)//按键读取
+	  {
+		  key_flag=0;
+		  key_read();
+		  
+	  }
+		  
+  }
+  3、到stm32f10x_it.c用我们的滴答定时器来定时，添加命令
+  extern u8 key_flag;
+  void SysTick_Handler(void)
+  {
+	  static u8 key_flag;
+	TimingDelay--;
+	if(++key_sum==50)//50ms,经测试扫描间隔只要大于50ms，基本就已经不会受到按键抖动的影响了
+	{
+		key_sum=0;
+		key_flag=1;
+		
+	}
+	  
+  }
+  
+static  u16 key4_sum=0;
+  if(key4==1)
+  {
+    key4_sum++;
+	if(key4_sum==1)//短按
+	{
+	//不触发
+	}
+if(key4_sum==40)//40*50ms,长按2000ms触发
+{
+	GPIOC->ODR ^=(1<<15);//按位取反
+	GPIOD->ODR |=(1<<2);
+	GPIOD->ODR &=~(1<<2);
+	key4_sum=30；//为了显示长按效果，不断触发长按
+
+}
+  
+  }

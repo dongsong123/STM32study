@@ -1,0 +1,63 @@
+1、引脚初始化
+RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_ADC1,ENABLE);
+ 
+RCC_ADCCLKConfig(RCC_PCLK2_Div6);//在rcc里找到
+										对ADC时钟进行6分频，ADC时钟过快的话，可能会导致测得的AD值不准确
+										可以一下分频：
+									  *     @arg RCC_PCLK2_Div2: ADC clock = PCLK2/2
+									  *     @arg RCC_PCLK2_Div4: ADC clock = PCLK2/4
+									  *     @arg RCC_PCLK2_Div6: ADC clock = PCLK2/6
+									  *     @arg RCC_PCLK2_Div8: ADC clock = PCLK2/8
+ 
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+2、ADC结构体配置
+ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;//独立模式，双ADC不能同步，每个ADC接口独立工作
+ADC_InitStructure.ADC_ScanConvMode = DISABLE；//如果只是用了一个通道的话，DISABLE就可以了，如果使用了多个通道的话，则必须将其设置为ENABLE。
+ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;//这里设置为ENABLE，即连续转换。如果设置为DISABLE，则是单次转换。
+													连续转换直到所有的数据转换完成后才停止转换，而单次转换则只转换一次数据就停止，要再次触发转换才可以
+ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;//触发模式
+ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;//右对齐方式。建议采用右对齐方式，因为这样处理数据会比较方便。
+														当然如果要从高位开始传输数据，那么采用左对齐优势就明显了。
+ADC_InitStructure.ADC_NbrOfChannel = 1;//通道的数量,range from 1 to 16.
+ADC_Init(ADC1,&ADC_InitStructure);
+
+3、对ADC进行一个校准
+ADC_Cmd(ADC1, ENABLE);//使能adc
+ADC_ResetCalibration(ADC1);
+while(ADC_GetResetCalibrationStatus( ADC1));
+ADC_StartCalibration( ADC1);
+while(ADC_GetCalibrationStatus(ADC1));
+
+4、读取adc值
+u16 Get_Adc(u8 channel)
+{
+		u16 temp;
+		ADC_RegularChannelConfig(ADC1, channel, 1, ADC_SampleTime_239Cycles5);//规则组通道初始化这个库函数来对ADC通道配置
+																			第一个入口参数为选的配置的ADC，第二个入口参数为选择配置的通道，
+																			第三个入口参数则配置ADC编号（例如使用ADC1，那么就写1），
+																			第四个入口参数则代表单次采样的时钟周期数。
+
+
+		ADC_SoftwareStartConvCmd( ADC1,ENABLE);//通过程序软件启动AD转换
+		while(ADC_GetFlagStatus(ADC1,ADC_FLAG_EOC) == 0);//通过EOC标志位来判断转换是否完成,当AD转换完成后,EOC标志位会置1，
+		temp = ADC_GetConversionValue( ADC1);//获取ADC数据库函数对数据进行读取,精度是12位了（也就是0~4096）
+										因此我们读出来的AD值数据是12位的，用通俗的话来讲就是把3.3V分成4096份。
+		ADC_SoftwareStartConvCmd( ADC1,DISABLE);
+		return temp;
+}
+5、对引脚进行AD采样
+while(1)
+{
+if(adc_flag)
+{
+adc_flag=0;
+adc_val=Get_Adc(8)*3.3/4096;
+sprintf((char*)string,"ADC_VAL:%.2f  ",adc_val);
+LCD_DisplayStringLine(Line2,string);
+
+}
+}
